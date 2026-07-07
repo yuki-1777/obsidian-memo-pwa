@@ -1,4 +1,4 @@
-const CACHE = 'memo-v3';
+const CACHE = 'memo-v4';
 const CORE = ['.', 'index.html', 'manifest.webmanifest'];
 
 self.addEventListener('install', e => {

@@ -34,96 +34,124 @@
   }
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html, body{height:100%;overflow:hidden;overscroll-behavior:none}
 body{
   font-family:-apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
   background:var(--bg);
   color:var(--text);
-  min-height:100dvh;
   font-size:15px;
   line-height:1.7;
 }
-#app{max-width:640px;margin:0 auto;padding:0 14px calc(40px + env(safe-area-inset-bottom))}
+#app{
+  height:100dvh;
+  max-width:640px;margin:0 auto;
+  display:flex;flex-direction:column;
+}
 
+/* ---------- header ---------- */
 header{
-  display:flex;align-items:center;
-  padding:calc(10px + env(safe-area-inset-top)) 2px 10px;
+  display:flex;align-items:center;flex-shrink:0;
+  padding:calc(6px + env(safe-area-inset-top)) 8px 6px 16px;
+  border-bottom:1px solid var(--border);
 }
 header h1{font-size:15px;font-weight:600;flex:1}
 .hbtn{
   border:none;background:none;color:var(--sub);
-  width:36px;height:36px;display:grid;place-items:center;cursor:pointer;
+  width:44px;height:44px;display:grid;place-items:center;cursor:pointer;
 }
 .hbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .hbtn.spin svg{animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* editor */
-.editor{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:8px;
-  padding:10px 12px;
+/* ---------- timeline (scroll area) ---------- */
+#scroll{
+  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:0 14px;
+  overscroll-behavior:contain;
 }
-textarea{
-  width:100%;border:none;outline:none;background:transparent;resize:none;
-  font:inherit;color:var(--text);min-height:60px;max-height:40dvh;
+#ptr{
+  height:0;overflow:hidden;
+  display:flex;align-items:flex-end;justify-content:center;
+  color:var(--sub);font-size:12px;
+  transition:height .2s;
 }
-textarea::placeholder{color:var(--sub);opacity:.7}
-.suggest{
-  display:none;flex-wrap:wrap;gap:6px;padding:6px 0 2px;
+#ptr.pulling{transition:none}
+.dayhead{
+  position:sticky;top:0;z-index:5;
+  text-align:center;padding:8px 0 6px;
+  background:var(--bg);
+  font-size:12px;color:var(--sub);
 }
-.suggest.open{display:flex}
-.suggest button{
-  border:none;background:var(--bg);color:var(--tag);
-  border-radius:4px;padding:2px 8px;font-size:12.5px;font-family:inherit;cursor:pointer;
-  white-space:nowrap;
-}
-.editor-foot{
-  display:flex;align-items:center;gap:8px;
-  margin-top:6px;padding-top:8px;border-top:1px solid var(--border);
-}
-.todo-toggle{
-  display:flex;align-items:center;gap:5px;
-  border:none;background:none;color:var(--sub);font-size:12.5px;font-family:inherit;cursor:pointer;
-  padding:4px 2px;
-}
-.todo-toggle .box{
-  width:14px;height:14px;border:1.5px solid var(--sub);border-radius:3px;display:grid;place-items:center;
-  font-size:10px;color:transparent;
-}
-.todo-toggle.on{color:var(--accent)}
-.todo-toggle.on .box{border-color:var(--accent);color:var(--accent)}
-.send{
-  margin-left:auto;border:none;background:var(--accent);color:#fff;
-  font-size:12.5px;font-weight:600;font-family:inherit;letter-spacing:.05em;
-  padding:6px 16px;border-radius:5px;cursor:pointer;
-}
-.send:disabled{opacity:.4}
-
-/* list */
-.timeline{margin-top:18px}
-.dayhead{font-size:12px;color:var(--sub);margin:18px 2px 6px}
 .memo{
   background:var(--card);
   border:1px solid var(--border);
   border-radius:8px;
-  padding:10px 12px;
+  padding:8px 12px;
   margin-bottom:8px;
-  position:relative;
 }
-.memo-head{display:flex;align-items:center;gap:8px;margin-bottom:2px}
-.memo-time{font-size:12px;color:var(--sub)}
-.state{margin-left:auto;font-size:11px;color:var(--sub)}
-.state.done{color:var(--accent)}
 .memo-body{white-space:pre-wrap;word-break:break-word}
 .memo-body .tag{color:var(--tag)}
 .memo-body .todo{color:var(--sub)}
+.memo-foot{
+  display:flex;align-items:center;gap:8px;margin-top:2px;
+}
+.memo-time{font-size:11px;color:var(--sub)}
+.state{margin-left:auto;font-size:11px;color:var(--sub)}
+.state.done{color:var(--accent)}
+.state.pending{text-decoration:underline;cursor:pointer}
 .memo .del{
-  border:none;background:none;color:var(--sub);font-size:14px;cursor:pointer;padding:0 2px;
+  border:none;background:none;color:var(--sub);font-size:13px;cursor:pointer;
+  padding:2px 6px;margin-right:-6px;
 }
 .empty{text-align:center;color:var(--sub);padding:48px 0;font-size:13px}
+#bottomPad{height:10px}
 
-/* settings */
+/* ---------- composer (bottom fixed in flow) ---------- */
+.composer{
+  flex-shrink:0;
+  border-top:1px solid var(--border);
+  background:var(--bg);
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+}
+.suggest{
+  display:none;flex-wrap:wrap;gap:6px;padding:0 2px 8px;
+}
+.suggest.open{display:flex}
+.suggest button{
+  border:1px solid var(--border);background:var(--card);color:var(--tag);
+  border-radius:14px;padding:4px 12px;font-size:13px;font-family:inherit;cursor:pointer;
+  white-space:nowrap;min-height:30px;
+}
+.bar{
+  display:flex;align-items:flex-end;gap:6px;
+}
+.todo-toggle{
+  flex-shrink:0;border:none;background:none;color:var(--sub);cursor:pointer;
+  width:40px;height:40px;display:grid;place-items:center;
+}
+.todo-toggle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.todo-toggle.on{color:var(--accent)}
+.inputwrap{
+  flex:1;background:var(--card);
+  border:1px solid var(--border);border-radius:18px;
+  padding:7px 14px;
+  display:flex;align-items:center;
+}
+textarea{
+  width:100%;border:none;outline:none;background:transparent;resize:none;
+  font:inherit;color:var(--text);
+  line-height:1.55;max-height:132px;
+  display:block;
+}
+textarea::placeholder{color:var(--sub);opacity:.7}
+.send{
+  flex-shrink:0;border:none;background:var(--accent);color:#fff;cursor:pointer;
+  width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
+}
+.send:disabled{opacity:.4}
+.send svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* ---------- settings ---------- */
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:30;opacity:0;pointer-events:none;transition:opacity .2s}
 .scrim.open{opacity:1;pointer-events:auto}
 .sheet{
@@ -131,6 +159,7 @@ textarea::placeholder{color:var(--sub);opacity:.7}
   background:var(--card);border:1px solid var(--border);border-bottom:none;
   border-radius:12px 12px 0 0;padding:18px 18px calc(26px + env(safe-area-inset-bottom));
   transform:translateY(105%);transition:transform .25s ease;
+  max-height:85dvh;overflow-y:auto;
 }
 .sheet.open{transform:none}
 .sheet h2{font-size:14px;margin-bottom:4px}
@@ -139,14 +168,14 @@ textarea::placeholder{color:var(--sub);opacity:.7}
 .sheet input, .sheet textarea{
   width:100%;border:1px solid var(--border);border-radius:6px;background:var(--bg);
   padding:9px 10px;font-size:14px;color:var(--text);font-family:inherit;outline:none;
-  resize:none;min-height:auto;
+  resize:none;min-height:auto;max-height:none;
 }
 .sheet .save{
   margin-top:16px;width:100%;border:none;background:var(--accent);color:#fff;
-  font-size:13px;font-weight:600;font-family:inherit;padding:11px;border-radius:6px;cursor:pointer;
+  font-size:13px;font-weight:600;font-family:inherit;padding:12px;border-radius:6px;cursor:pointer;
 }
 .toast{
-  position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,16px);
+  position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-10px);
   background:var(--text);color:var(--bg);padding:8px 16px;border-radius:6px;
   font-size:12.5px;opacity:0;transition:all .25s;z-index:40;pointer-events:none;
   max-width:86vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
@@ -166,16 +195,26 @@ textarea::placeholder{color:var(--sub);opacity:.7}
     </button>
   </header>
 
-  <div class="editor">
-    <textarea id="input" rows="3" placeholder="What do you think now..." enterkeyhint="enter"></textarea>
-    <div class="suggest" id="suggest"></div>
-    <div class="editor-foot">
-      <button class="todo-toggle" id="todoToggle"><span class="box">✓</span>TODO</button>
-      <button class="send" id="btnSend" disabled>NOTE</button>
-    </div>
+  <div id="scroll">
+    <div id="ptr">離して更新</div>
+    <div id="timeline"></div>
+    <div id="bottomPad"></div>
   </div>
 
-  <div class="timeline" id="timeline"></div>
+  <div class="composer">
+    <div class="suggest" id="suggest"></div>
+    <div class="bar">
+      <button class="todo-toggle" id="todoToggle" aria-label="TODOとして送信">
+        <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 12l2.2 2.2L15.5 9.5"/></svg>
+      </button>
+      <div class="inputwrap">
+        <textarea id="input" rows="1" placeholder="What do you think now..."></textarea>
+      </div>
+      <button class="send" id="btnSend" disabled aria-label="送信">
+        <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+      </button>
+    </div>
+  </div>
 
   <div class="scrim" id="scrim"></div>
   <div class="sheet" id="sheet">
@@ -200,7 +239,7 @@ const LS = {
   set(k, v){ localStorage.setItem(k, JSON.stringify(v)) },
 };
 let cfg   = LS.get('cfg', { repo:'', token:'' });
-let memos = LS.get('memos', []);           // {id, createdAt, content, task, state: pending|sent|done, path}
+let memos = LS.get('memos', []);           // 新しい順 {id, createdAt, content, task, state, path}
 let tags  = LS.get('tags', ['タスク','toai','雑談']);
 let todo  = false;
 
@@ -217,6 +256,13 @@ function toast(msg){
   clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600);
 }
 const WD = ['日','月','火','水','木','金','土'];
+function scrollBottom(){
+  const sc = $('#scroll'); sc.scrollTop = sc.scrollHeight;
+}
+function nearBottom(){
+  const sc = $('#scroll');
+  return sc.scrollHeight - sc.scrollTop - sc.clientHeight < 120;
+}
 
 /* ---------- GitHub API ---------- */
 function gh(path, opt = {}){
@@ -246,10 +292,16 @@ async function send(){
   if(!text) return;
   if(!cfg.repo || !cfg.token){ openSheet(); toast('先にGitHubの設定をしてください'); return; }
   const m = { id:crypto.randomUUID(), createdAt:nowISO(), content:text, task:todo, state:'pending' };
-  memos.unshift(m); save(); render();
-  $('#input').value = ''; $('#input').style.height = 'auto'; updateSend();
+  memos.unshift(m); save(); render(); scrollBottom();
+  const ta = $('#input');
+  ta.value = ''; ta.style.height = 'auto'; updateSend(); renderSuggest();
   harvestTags(text);
   try{ await upload(m); save(); render(); }
+  catch(e){ toast('送信失敗 — 送信待ちをタップで再送できます'); }
+}
+async function retry(m){
+  if(m.state !== 'pending') return;
+  try{ await upload(m); save(); render(); toast('送信しました'); }
   catch(e){ toast('送信失敗 — 通信状態かトークンを確認してください'); }
 }
 async function retryPending(){
@@ -284,7 +336,6 @@ function harvestTags(text){
   for(const t of found){ tags = [t, ...tags.filter(x => x !== t)]; }
   tags = tags.slice(0, 30); LS.set('tags', tags);
 }
-// カーソル直前の「#〜」トークンを取得
 function activeToken(){
   const ta = $('#input');
   const before = ta.value.slice(0, ta.selectionStart ?? ta.value.length);
@@ -302,7 +353,6 @@ function renderSuggest(){
   for(const t of hits){
     const b = document.createElement('button');
     b.textContent = `#${t}`;
-    // mousedownでフォーカスを奪わないように
     b.onmousedown = e => e.preventDefault();
     b.onclick = () => insertTag(t);
     box.appendChild(b);
@@ -320,19 +370,20 @@ function insertTag(t){
   updateSend(); renderSuggest();
 }
 
-/* ---------- render ---------- */
+/* ---------- render (古い順に上→下、最新が入力欄のすぐ上) ---------- */
 function fmtBody(s){
   return esc(s).replace(/#([^\s#]+)/g, '<span class="tag">#$1</span>');
 }
-const STATE_LABEL = { pending:'送信待ち', sent:'送信済', done:'取込済' };
+const STATE_LABEL = { pending:'送信待ち・タップで再送', sent:'送信済', done:'取込済' };
 function render(){
   const tl = $('#timeline'); tl.innerHTML = '';
   if(!memos.length){
     tl.innerHTML = `<div class="empty">メモはまだありません</div>`;
     return;
   }
+  const asc = [...memos].reverse();
   let lastDay = '';
-  for(const m of memos){
+  for(const m of asc){
     const day = m.createdAt.slice(0,10);
     if(day !== lastDay){
       lastDay = day;
@@ -345,12 +396,14 @@ function render(){
     const el = document.createElement('div');
     el.className = 'memo';
     el.innerHTML = `
-      <div class="memo-head">
+      <div class="memo-body">${m.task ? '<span class="todo">☐ </span>' : ''}${fmtBody(m.content)}</div>
+      <div class="memo-foot">
         <span class="memo-time">${m.createdAt.slice(11,16)}</span>
         <span class="state ${m.state}">${STATE_LABEL[m.state]}</span>
         ${m.state === 'pending' ? '<button class="del">×</button>' : ''}
-      </div>
-      <div class="memo-body">${m.task ? '<span class="todo">☐ </span>' : ''}${fmtBody(m.content)}</div>`;
+      </div>`;
+    const st = el.querySelector('.state');
+    if(m.state === 'pending') st.onclick = () => retry(m);
     const del = el.querySelector('.del');
     if(del) del.onclick = () => {
       if(confirm('この未送信メモを削除しますか？')){
@@ -362,7 +415,7 @@ function render(){
 }
 function save(){ LS.set('memos', memos.slice(0, 300)) }
 
-/* ---------- editor UI ---------- */
+/* ---------- composer UI ---------- */
 function updateSend(){ $('#btnSend').disabled = !$('#input').value.trim() }
 $('#input').addEventListener('input', e => {
   updateSend(); renderSuggest();
@@ -373,6 +426,7 @@ $('#input').addEventListener('click', renderSuggest);
 $('#input').addEventListener('keyup', e => {
   if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) renderSuggest();
 });
+$('#input').addEventListener('focus', () => setTimeout(scrollBottom, 300));
 $('#input').addEventListener('blur', () => setTimeout(() => {
   if(document.activeElement !== $('#input')){ $('#suggest').classList.remove('open'); }
 }, 150));
@@ -381,6 +435,43 @@ $('#todoToggle').onclick = () => {
   todo = !todo;
   $('#todoToggle').classList.toggle('on', todo);
 };
+
+/* ---------- pull to refresh ---------- */
+(() => {
+  const sc = $('#scroll'), ptr = $('#ptr');
+  let startY = null, pull = 0;
+  const THRESH = 64;
+  sc.addEventListener('touchstart', e => {
+    startY = sc.scrollTop <= 0 ? e.touches[0].clientY : null;
+    pull = 0;
+  }, { passive:true });
+  sc.addEventListener('touchmove', e => {
+    if(startY === null) return;
+    pull = Math.max(0, (e.touches[0].clientY - startY) * .5);
+    if(pull > 0){
+      ptr.classList.add('pulling');
+      ptr.style.height = Math.min(pull, 90) + 'px';
+      ptr.textContent = pull >= THRESH ? '離して更新' : '引っ張って更新';
+    }
+  }, { passive:true });
+  sc.addEventListener('touchend', () => {
+    ptr.classList.remove('pulling');
+    ptr.style.height = '0px';
+    if(pull >= THRESH) refresh();
+    startY = null; pull = 0;
+  });
+})();
+
+/* ---------- iOSキーボード対応: visualViewportに合わせて高さを調整 ---------- */
+if(window.visualViewport){
+  const vv = window.visualViewport;
+  const fit = () => {
+    const wasBottom = nearBottom();
+    document.getElementById('app').style.height = vv.height + 'px';
+    if(wasBottom) scrollBottom();
+  };
+  vv.addEventListener('resize', fit);
+}
 
 /* ---------- settings ---------- */
 function openSheet(){
@@ -401,7 +492,7 @@ $('#btnSave').onclick = () => {
 $('#btnRefresh').onclick = refresh;
 
 /* ---------- init ---------- */
-render(); updateSend();
+render(); updateSend(); scrollBottom();
 if(!cfg.repo || !cfg.token) setTimeout(openSheet, 400);
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
