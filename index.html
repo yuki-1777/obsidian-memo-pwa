@@ -69,17 +69,15 @@ textarea{
   font:inherit;color:var(--text);min-height:60px;max-height:40dvh;
 }
 textarea::placeholder{color:var(--sub);opacity:.7}
-.tagrow{
-  display:flex;gap:6px;overflow-x:auto;padding:6px 0 2px;
-  scrollbar-width:none;
+.suggest{
+  display:none;flex-wrap:wrap;gap:6px;padding:6px 0 2px;
 }
-.tagrow::-webkit-scrollbar{display:none}
-.chip{
-  flex:0 0 auto;border:none;background:var(--bg);color:var(--sub);
+.suggest.open{display:flex}
+.suggest button{
+  border:none;background:var(--bg);color:var(--tag);
   border-radius:4px;padding:2px 8px;font-size:12.5px;font-family:inherit;cursor:pointer;
   white-space:nowrap;
 }
-.chip.on{color:var(--tag);background:color-mix(in srgb, var(--tag) 12%, transparent)}
 .editor-foot{
   display:flex;align-items:center;gap:8px;
   margin-top:6px;padding-top:8px;border-top:1px solid var(--border);
@@ -138,9 +136,10 @@ textarea::placeholder{color:var(--sub);opacity:.7}
 .sheet h2{font-size:14px;margin-bottom:4px}
 .sheet .note{font-size:12px;color:var(--sub);margin-bottom:10px}
 .sheet label{display:block;font-size:12px;color:var(--sub);margin:10px 0 4px}
-.sheet input{
+.sheet input, .sheet textarea{
   width:100%;border:1px solid var(--border);border-radius:6px;background:var(--bg);
   padding:9px 10px;font-size:14px;color:var(--text);font-family:inherit;outline:none;
+  resize:none;min-height:auto;
 }
 .sheet .save{
   margin-top:16px;width:100%;border:none;background:var(--accent);color:#fff;
@@ -169,7 +168,7 @@ textarea::placeholder{color:var(--sub);opacity:.7}
 
   <div class="editor">
     <textarea id="input" rows="3" placeholder="What do you think now..." enterkeyhint="enter"></textarea>
-    <div class="tagrow" id="tagrow"></div>
+    <div class="suggest" id="suggest"></div>
     <div class="editor-foot">
       <button class="todo-toggle" id="todoToggle"><span class="box">✓</span>TODO</button>
       <button class="send" id="btnSend" disabled>NOTE</button>
@@ -186,6 +185,8 @@ textarea::placeholder{color:var(--sub);opacity:.7}
     <input id="cfgRepo" placeholder="yuki-1777/obsidian-memo-inbox" autocapitalize="off" autocorrect="off">
     <label>Fine-grained Personal Access Token（Contents: Read and write）</label>
     <input id="cfgToken" type="password" placeholder="github_pat_…" autocapitalize="off" autocorrect="off">
+    <label>タグ（改行区切り。#入力時の候補に出ます）</label>
+    <textarea id="cfgTags" rows="4" autocapitalize="off" autocorrect="off"></textarea>
     <button class="save" id="btnSave">保存</button>
   </div>
 
@@ -277,38 +278,46 @@ async function refresh(){
   btn.classList.remove('spin');
 }
 
-/* ---------- tags ---------- */
+/* ---------- tags (X風: #入力でサジェスト) ---------- */
 function harvestTags(text){
   const found = [...text.matchAll(/#([^\s#]+)/g)].map(m => m[1]);
   for(const t of found){ tags = [t, ...tags.filter(x => x !== t)]; }
-  tags = tags.slice(0, 12); LS.set('tags', tags); renderTags();
+  tags = tags.slice(0, 30); LS.set('tags', tags);
 }
-function renderTags(){
-  const row = $('#tagrow'); row.innerHTML = '';
-  const cur = $('#input').value;
-  for(const t of tags){
+// カーソル直前の「#〜」トークンを取得
+function activeToken(){
+  const ta = $('#input');
+  const before = ta.value.slice(0, ta.selectionStart ?? ta.value.length);
+  const m = before.match(/(^|[\s　])#([^\s　#]*)$/);
+  return m ? { query: m[2], start: before.length - m[2].length - 1 } : null;
+}
+function renderSuggest(){
+  const box = $('#suggest');
+  const tok = activeToken();
+  if(!tok){ box.classList.remove('open'); box.innerHTML = ''; return; }
+  const q = tok.query;
+  const hits = tags.filter(t => t !== q && (q === '' || t.toLowerCase().includes(q.toLowerCase()))).slice(0, 8);
+  if(!hits.length){ box.classList.remove('open'); box.innerHTML = ''; return; }
+  box.innerHTML = '';
+  for(const t of hits){
     const b = document.createElement('button');
-    b.className = 'chip' + (cur.includes(`#${t}`) ? ' on' : '');
     b.textContent = `#${t}`;
-    b.onclick = () => {
-      const ta = $('#input');
-      if(ta.value.includes(`#${t}`)){
-        ta.value = ta.value.replace(new RegExp(`#${t.replace(/[.*+?^${}()|[\\]\\\\]/g,'\\$&')}\\s?`), '');
-      }else{
-        const sep = ta.value && !/\s$/.test(ta.value) ? ' ' : '';
-        ta.value += `${sep}#${t} `;
-      }
-      ta.focus(); updateSend(); renderTags();
-    };
-    row.appendChild(b);
+    // mousedownでフォーカスを奪わないように
+    b.onmousedown = e => e.preventDefault();
+    b.onclick = () => insertTag(t);
+    box.appendChild(b);
   }
-  const add = document.createElement('button');
-  add.className = 'chip'; add.textContent = '＋';
-  add.onclick = () => {
-    const t = prompt('タグ名（#は不要）');
-    if(t && t.trim()){ tags = [t.trim(), ...tags.filter(x => x !== t.trim())].slice(0,12); LS.set('tags', tags); renderTags(); }
-  };
-  row.appendChild(add);
+  box.classList.add('open');
+}
+function insertTag(t){
+  const ta = $('#input');
+  const tok = activeToken();
+  if(!tok) return;
+  const caret = ta.selectionStart ?? ta.value.length;
+  ta.value = ta.value.slice(0, tok.start) + `#${t} ` + ta.value.slice(caret);
+  const pos = tok.start + t.length + 2;
+  ta.focus(); ta.setSelectionRange(pos, pos);
+  updateSend(); renderSuggest();
 }
 
 /* ---------- render ---------- */
@@ -356,10 +365,17 @@ function save(){ LS.set('memos', memos.slice(0, 300)) }
 /* ---------- editor UI ---------- */
 function updateSend(){ $('#btnSend').disabled = !$('#input').value.trim() }
 $('#input').addEventListener('input', e => {
-  updateSend(); renderTags();
+  updateSend(); renderSuggest();
   e.target.style.height = 'auto';
   e.target.style.height = e.target.scrollHeight + 'px';
 });
+$('#input').addEventListener('click', renderSuggest);
+$('#input').addEventListener('keyup', e => {
+  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) renderSuggest();
+});
+$('#input').addEventListener('blur', () => setTimeout(() => {
+  if(document.activeElement !== $('#input')){ $('#suggest').classList.remove('open'); }
+}, 150));
 $('#btnSend').onclick = send;
 $('#todoToggle').onclick = () => {
   todo = !todo;
@@ -369,6 +385,7 @@ $('#todoToggle').onclick = () => {
 /* ---------- settings ---------- */
 function openSheet(){
   $('#cfgRepo').value = cfg.repo; $('#cfgToken').value = cfg.token;
+  $('#cfgTags').value = tags.join('\n');
   $('#scrim').classList.add('open'); $('#sheet').classList.add('open');
 }
 function closeSheet(){ $('#scrim').classList.remove('open'); $('#sheet').classList.remove('open') }
@@ -376,12 +393,15 @@ $('#btnSettings').onclick = openSheet;
 $('#scrim').onclick = closeSheet;
 $('#btnSave').onclick = () => {
   cfg = { repo:$('#cfgRepo').value.trim(), token:$('#cfgToken').value.trim() };
-  LS.set('cfg', cfg); closeSheet(); toast('保存しました');
+  LS.set('cfg', cfg);
+  tags = $('#cfgTags').value.split('\n').map(t => t.trim().replace(/^#/, '')).filter(Boolean).slice(0, 30);
+  LS.set('tags', tags);
+  closeSheet(); toast('保存しました');
 };
 $('#btnRefresh').onclick = refresh;
 
 /* ---------- init ---------- */
-renderTags(); render(); updateSend();
+render(); updateSend();
 if(!cfg.repo || !cfg.token) setTimeout(openSheet, 400);
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
