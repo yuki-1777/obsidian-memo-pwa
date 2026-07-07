@@ -3,236 +3,153 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>帖 — memo-cho</title>
-<meta name="description" content="外出先からObsidianへ書き送るThino風メモ帖">
+<title>Memo</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="帖">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Memo">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="theme-color" content="#f4efe4" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#161310" media="(prefers-color-scheme: dark)">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#f8f8f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1e1e1e" media="(prefers-color-scheme: dark)">
 <style>
 :root{
-  --washi:#f4efe4;
-  --card:#faf6ec;
-  --ink:#201b14;
-  --sub:#8a7f6d;
-  --faint:#b3a892;
-  --hairline:#ddd4c1;
-  --accent:#cf3c1f;
-  --accent-ink:#a92e15;
-  --accent-soft:#f3ddd4;
-  --ok:#4a7c59;
-  --mincho:"Shippori Mincho B1",serif;
-  --gothic:"Zen Kaku Gothic New",sans-serif;
+  --bg:#f8f8f7;
+  --card:#ffffff;
+  --text:#333333;
+  --sub:#8a8a8a;
+  --border:#e2e2e0;
+  --accent:#5f8b62;
+  --tag:#5b7c99;
 }
 @media (prefers-color-scheme: dark){
   :root{
-    --washi:#161310;
-    --card:#1f1a14;
-    --ink:#ece5d6;
-    --sub:#93887a;
-    --faint:#5c5344;
-    --hairline:#37301f;
-    --accent:#e0512f;
-    --accent-ink:#f06a48;
-    --accent-soft:#3a2018;
-    --ok:#7fb08d;
+    --bg:#1e1e1e;
+    --card:#262626;
+    --text:#dcdcdc;
+    --sub:#8a8a8a;
+    --border:#3a3a3a;
+    --accent:#6da571;
+    --tag:#7fa3c4;
   }
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{height:100%}
 body{
-  font-family:var(--gothic);
-  background:var(--washi);
-  color:var(--ink);
+  font-family:-apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+  background:var(--bg);
+  color:var(--text);
   min-height:100dvh;
-  line-height:1.7;
   font-size:15px;
-  overscroll-behavior-y:none;
+  line-height:1.7;
 }
-/* washi grain */
-body::before{
-  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
-  mix-blend-mode:multiply;
-}
-@media (prefers-color-scheme: dark){ body::before{mix-blend-mode:screen;opacity:.5} }
+#app{max-width:640px;margin:0 auto;padding:0 14px calc(40px + env(safe-area-inset-bottom))}
 
-#app{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:0 16px calc(48px + env(safe-area-inset-bottom))}
-
-/* ---------- header ---------- */
 header{
-  position:sticky;top:0;z-index:20;
-  display:flex;align-items:center;gap:10px;
+  display:flex;align-items:center;
   padding:calc(10px + env(safe-area-inset-top)) 2px 10px;
-  background:linear-gradient(to bottom, var(--washi) 78%, transparent);
 }
-.wordmark{display:flex;align-items:baseline;gap:9px;flex:1;min-width:0}
-.wordmark .kanji{
-  font-family:var(--mincho);font-weight:800;font-size:26px;line-height:1;
-  color:var(--ink);letter-spacing:.02em;
-}
-.wordmark .roma{
-  font-family:var(--mincho);font-size:10px;letter-spacing:.34em;
-  color:var(--sub);text-transform:uppercase;white-space:nowrap;
-}
+header h1{font-size:15px;font-weight:600;flex:1}
 .hbtn{
-  width:38px;height:38px;border-radius:50%;border:1px solid var(--hairline);
-  background:var(--card);color:var(--sub);display:grid;place-items:center;
-  font-size:16px;cursor:pointer;transition:transform .15s ease, color .15s;
+  border:none;background:none;color:var(--sub);
+  width:36px;height:36px;display:grid;place-items:center;cursor:pointer;
 }
-.hbtn:active{transform:scale(.9)}
+.hbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .hbtn.spin svg{animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.hbtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
-/* ---------- composer ---------- */
-.composer{
+/* editor */
+.editor{
   background:var(--card);
-  border:1px solid var(--hairline);
-  border-radius:4px;
-  padding:14px 14px 12px;
-  box-shadow:0 1px 0 rgba(60,45,20,.05), 0 8px 24px -18px rgba(60,45,20,.35);
-  position:relative;
-}
-.composer::after{ /* 朱の落款 corner */
-  content:"";position:absolute;top:-1px;right:-1px;width:22px;height:22px;
-  background:var(--accent);
-  clip-path:polygon(100% 0, 0 0, 100% 100%);
-  border-radius:0 4px 0 0;
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:10px 12px;
 }
 textarea{
   width:100%;border:none;outline:none;background:transparent;resize:none;
-  font-family:var(--gothic);font-size:16px;line-height:1.75;color:var(--ink);
-  min-height:64px;max-height:40dvh;
+  font:inherit;color:var(--text);min-height:60px;max-height:40dvh;
 }
-textarea::placeholder{color:var(--faint)}
+textarea::placeholder{color:var(--sub);opacity:.7}
 .tagrow{
-  display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;
-  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+  display:flex;gap:6px;overflow-x:auto;padding:6px 0 2px;
+  scrollbar-width:none;
 }
 .tagrow::-webkit-scrollbar{display:none}
 .chip{
-  flex:0 0 auto;border:1px solid var(--hairline);background:transparent;
-  color:var(--sub);border-radius:999px;padding:3px 12px;font-size:12.5px;
-  font-family:var(--gothic);cursor:pointer;transition:all .15s;
+  flex:0 0 auto;border:none;background:var(--bg);color:var(--sub);
+  border-radius:4px;padding:2px 8px;font-size:12.5px;font-family:inherit;cursor:pointer;
   white-space:nowrap;
 }
-.chip:active{transform:scale(.93)}
-.chip.on{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-soft)}
-.chip.add{border-style:dashed;color:var(--faint)}
-.composer-foot{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-top:8px;padding-top:10px;border-top:1px solid var(--hairline);
+.chip.on{color:var(--tag);background:color-mix(in srgb, var(--tag) 12%, transparent)}
+.editor-foot{
+  display:flex;align-items:center;gap:8px;
+  margin-top:6px;padding-top:8px;border-top:1px solid var(--border);
 }
-.seg{
-  display:flex;border:1px solid var(--hairline);border-radius:999px;overflow:hidden;
+.todo-toggle{
+  display:flex;align-items:center;gap:5px;
+  border:none;background:none;color:var(--sub);font-size:12.5px;font-family:inherit;cursor:pointer;
+  padding:4px 2px;
 }
-.seg button{
-  border:none;background:transparent;color:var(--sub);
-  font-family:var(--mincho);font-weight:700;font-size:11.5px;letter-spacing:.18em;
-  padding:6px 14px 5px;cursor:pointer;transition:all .15s;
+.todo-toggle .box{
+  width:14px;height:14px;border:1.5px solid var(--sub);border-radius:3px;display:grid;place-items:center;
+  font-size:10px;color:transparent;
 }
-.seg button.on{background:var(--ink);color:var(--washi)}
+.todo-toggle.on{color:var(--accent)}
+.todo-toggle.on .box{border-color:var(--accent);color:var(--accent)}
 .send{
-  border:none;background:var(--accent);color:#fbf6ec;
-  font-family:var(--mincho);font-weight:700;font-size:13px;letter-spacing:.3em;
-  padding:9px 22px 8px 26px;border-radius:999px;cursor:pointer;
-  transition:transform .12s ease, opacity .15s;
-  box-shadow:0 4px 14px -6px var(--accent);
+  margin-left:auto;border:none;background:var(--accent);color:#fff;
+  font-size:12.5px;font-weight:600;font-family:inherit;letter-spacing:.05em;
+  padding:6px 16px;border-radius:5px;cursor:pointer;
 }
-.send:active{transform:scale(.94)}
-.send:disabled{opacity:.35;box-shadow:none}
+.send:disabled{opacity:.4}
 
-/* ---------- timeline ---------- */
-.timeline{margin-top:26px}
-.dayhead{
-  display:flex;align-items:center;gap:12px;margin:26px 0 4px;
-}
-.dayhead .d{
-  font-family:var(--mincho);font-weight:700;font-size:13.5px;color:var(--ink);
-  letter-spacing:.08em;white-space:nowrap;
-}
-.dayhead::after{content:"";height:1px;flex:1;background:var(--hairline)}
+/* list */
+.timeline{margin-top:18px}
+.dayhead{font-size:12px;color:var(--sub);margin:18px 2px 6px}
 .memo{
-  position:relative;padding:13px 2px 13px 20px;
-  border-bottom:1px solid var(--hairline);
-  animation:rise .45s cubic-bezier(.2,.7,.3,1) backwards;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:10px 12px;
+  margin-bottom:8px;
+  position:relative;
 }
-.memo:nth-child(-n+8){animation-delay:calc(var(--i,0)*55ms)}
-@keyframes rise{from{opacity:0;transform:translateY(10px)}}
-.memo::before{ /* thread */
-  content:"";position:absolute;left:5px;top:0;bottom:0;width:1px;background:var(--hairline);
-}
-.memo::after{ /* node */
-  content:"";position:absolute;left:2.5px;top:22px;width:6px;height:6px;border-radius:50%;
-  background:var(--washi);border:1.5px solid var(--faint);
-}
-.memo.task::after{border-color:var(--accent);background:var(--accent)}
 .memo-head{display:flex;align-items:center;gap:8px;margin-bottom:2px}
-.memo-time{
-  font-family:var(--mincho);font-weight:700;font-size:13px;color:var(--sub);
-  letter-spacing:.06em;font-variant-numeric:tabular-nums;
-}
-.badge{
-  font-size:10px;letter-spacing:.14em;color:var(--accent-ink);
-  border:1px solid currentColor;border-radius:2px;padding:0 5px;
-  font-family:var(--mincho);font-weight:700;
-}
-.state{margin-left:auto;font-size:10.5px;color:var(--faint);letter-spacing:.1em;display:flex;align-items:center;gap:4px}
-.state .dot{width:6px;height:6px;border-radius:50%;background:var(--faint)}
-.state.sent .dot{background:var(--accent)}
-.state.done{color:var(--ok)}
-.state.done .dot{background:var(--ok)}
-.state.pending .dot{animation:pulse 1.2s ease-in-out infinite}
-@keyframes pulse{50%{opacity:.25}}
-.memo-body{white-space:pre-wrap;word-break:break-word;font-size:15px}
-.memo-body .tag{color:var(--accent-ink);font-weight:500}
+.memo-time{font-size:12px;color:var(--sub)}
+.state{margin-left:auto;font-size:11px;color:var(--sub)}
+.state.done{color:var(--accent)}
+.memo-body{white-space:pre-wrap;word-break:break-word}
+.memo-body .tag{color:var(--tag)}
+.memo-body .todo{color:var(--sub)}
 .memo .del{
-  position:absolute;right:0;top:10px;border:none;background:none;color:var(--faint);
-  font-size:15px;cursor:pointer;padding:4px 6px;display:none;
+  border:none;background:none;color:var(--sub);font-size:14px;cursor:pointer;padding:0 2px;
 }
-.memo.pending .del{display:block}
+.empty{text-align:center;color:var(--sub);padding:48px 0;font-size:13px}
 
-.empty{
-  text-align:center;color:var(--faint);padding:60px 0 20px;
-  font-family:var(--mincho);font-size:13px;letter-spacing:.2em;
-}
-.empty .big{font-size:40px;display:block;margin-bottom:14px;opacity:.5}
-
-/* ---------- settings sheet ---------- */
-.scrim{position:fixed;inset:0;background:rgba(20,15,8,.45);z-index:30;opacity:0;pointer-events:none;transition:opacity .25s}
+/* settings */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:30;opacity:0;pointer-events:none;transition:opacity .2s}
 .scrim.open{opacity:1;pointer-events:auto}
 .sheet{
   position:fixed;left:0;right:0;bottom:0;z-index:31;max-width:640px;margin:0 auto;
-  background:var(--card);border:1px solid var(--hairline);border-bottom:none;
-  border-radius:14px 14px 0 0;padding:20px 20px calc(28px + env(safe-area-inset-bottom));
-  transform:translateY(105%);transition:transform .3s cubic-bezier(.3,.8,.3,1);
+  background:var(--card);border:1px solid var(--border);border-bottom:none;
+  border-radius:12px 12px 0 0;padding:18px 18px calc(26px + env(safe-area-inset-bottom));
+  transform:translateY(105%);transition:transform .25s ease;
 }
 .sheet.open{transform:none}
-.sheet h2{font-family:var(--mincho);font-size:15px;letter-spacing:.2em;margin-bottom:4px}
-.sheet .note{font-size:12px;color:var(--sub);margin-bottom:14px}
-.sheet label{display:block;font-size:11px;letter-spacing:.12em;color:var(--sub);margin:12px 0 4px}
+.sheet h2{font-size:14px;margin-bottom:4px}
+.sheet .note{font-size:12px;color:var(--sub);margin-bottom:10px}
+.sheet label{display:block;font-size:12px;color:var(--sub);margin:10px 0 4px}
 .sheet input{
-  width:100%;border:1px solid var(--hairline);border-radius:4px;background:var(--washi);
-  padding:10px 12px;font-size:14px;color:var(--ink);font-family:var(--gothic);outline:none;
+  width:100%;border:1px solid var(--border);border-radius:6px;background:var(--bg);
+  padding:9px 10px;font-size:14px;color:var(--text);font-family:inherit;outline:none;
 }
-.sheet input:focus{border-color:var(--accent)}
 .sheet .save{
-  margin-top:18px;width:100%;border:none;background:var(--ink);color:var(--washi);
-  font-family:var(--mincho);font-weight:700;letter-spacing:.3em;font-size:13px;
-  padding:13px;border-radius:4px;cursor:pointer;
+  margin-top:16px;width:100%;border:none;background:var(--accent);color:#fff;
+  font-size:13px;font-weight:600;font-family:inherit;padding:11px;border-radius:6px;cursor:pointer;
 }
 .toast{
-  position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,20px);
-  background:var(--ink);color:var(--washi);padding:9px 18px;border-radius:999px;
-  font-size:12.5px;letter-spacing:.06em;opacity:0;transition:all .3s;z-index:40;pointer-events:none;
+  position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translate(-50%,16px);
+  background:var(--text);color:var(--bg);padding:8px 16px;border-radius:6px;
+  font-size:12.5px;opacity:0;transition:all .25s;z-index:40;pointer-events:none;
   max-width:86vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .toast.show{opacity:1;transform:translate(-50%,0)}
@@ -241,27 +158,21 @@ textarea::placeholder{color:var(--faint)}
 <body>
 <div id="app">
   <header>
-    <div class="wordmark">
-      <span class="kanji">帖</span>
-      <span class="roma">memo-cho</span>
-    </div>
-    <button class="hbtn" id="btnRefresh" title="同期状態を確認" aria-label="更新">
+    <h1>Memo</h1>
+    <button class="hbtn" id="btnRefresh" aria-label="更新">
       <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 3v5h-5"/></svg>
     </button>
-    <button class="hbtn" id="btnSettings" title="設定" aria-label="設定">
+    <button class="hbtn" id="btnSettings" aria-label="設定">
       <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.7l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.7-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.7.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.7 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.7.3h.1a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5h.1a1.6 1.6 0 0 0 1.7-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.7v.1a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>
     </button>
   </header>
 
-  <div class="composer">
-    <textarea id="input" rows="3" placeholder="いま、なにを書き留める？" enterkeyhint="enter"></textarea>
+  <div class="editor">
+    <textarea id="input" rows="3" placeholder="What do you think now..." enterkeyhint="enter"></textarea>
     <div class="tagrow" id="tagrow"></div>
-    <div class="composer-foot">
-      <div class="seg" id="typeSeg">
-        <button data-type="memo" class="on">NOTE</button>
-        <button data-type="task">TASK</button>
-      </div>
-      <button class="send" id="btnSend" disabled>記す</button>
+    <div class="editor-foot">
+      <button class="todo-toggle" id="todoToggle"><span class="box">✓</span>TODO</button>
+      <button class="send" id="btnSend" disabled>NOTE</button>
     </div>
   </div>
 
@@ -270,7 +181,7 @@ textarea::placeholder{color:var(--faint)}
   <div class="scrim" id="scrim"></div>
   <div class="sheet" id="sheet">
     <h2>設定</h2>
-    <p class="note">メモは自分のプライベートGitHubリポジトリに送られ、PC側の取り込みコマンドでObsidianへ統合されます。トークンはこの端末のみに保存されます。</p>
+    <p class="note">メモは自分のプライベートGitHubリポジトリに送信し、PC側のコマンドでObsidianに取り込みます。トークンはこの端末にのみ保存されます。</p>
     <label>GitHub リポジトリ（owner/repo）</label>
     <input id="cfgRepo" placeholder="yuki-1777/obsidian-memo-inbox" autocapitalize="off" autocorrect="off">
     <label>Fine-grained Personal Access Token（Contents: Read and write）</label>
@@ -290,7 +201,7 @@ const LS = {
 let cfg   = LS.get('cfg', { repo:'', token:'' });
 let memos = LS.get('memos', []);           // {id, createdAt, content, task, state: pending|sent|done, path}
 let tags  = LS.get('tags', ['タスク','toai','雑談']);
-let type  = 'memo';
+let todo  = false;
 
 /* ---------- helpers ---------- */
 function nowISO(){
@@ -333,12 +244,12 @@ async function send(){
   const text = $('#input').value.trim();
   if(!text) return;
   if(!cfg.repo || !cfg.token){ openSheet(); toast('先にGitHubの設定をしてください'); return; }
-  const m = { id:crypto.randomUUID(), createdAt:nowISO(), content:text, task:type==='task', state:'pending' };
+  const m = { id:crypto.randomUUID(), createdAt:nowISO(), content:text, task:todo, state:'pending' };
   memos.unshift(m); save(); render();
   $('#input').value = ''; $('#input').style.height = 'auto'; updateSend();
   harvestTags(text);
   try{ await upload(m); save(); render(); }
-  catch(e){ toast('送信失敗 — 電波かトークンを確認'); }
+  catch(e){ toast('送信失敗 — 通信状態かトークンを確認してください'); }
 }
 async function retryPending(){
   for(const m of memos.filter(m => m.state === 'pending')){
@@ -354,14 +265,14 @@ async function refresh(){
   try{
     await retryPending();
     const r = await gh('contents/inbox');
-    const listed = r.ok ? new Set((await r.json()).map(f => `inbox/${f.name}`)) : new Set();
     if(!r.ok && r.status !== 404) throw new Error(r.status);
+    const listed = r.ok ? new Set((await r.json()).map(f => `inbox/${f.name}`)) : new Set();
     let imported = 0;
     for(const m of memos){
       if(m.state === 'sent' && m.path && !listed.has(m.path)){ m.state = 'done'; imported++; }
     }
     save(); render();
-    toast(imported ? `${imported}件がPCに取り込まれました` : '同期状態を更新しました');
+    toast(imported ? `${imported}件がPCに取り込まれました` : '最新の状態です');
   }catch(e){ toast('確認に失敗しました'); }
   btn.classList.remove('spin');
 }
@@ -392,7 +303,7 @@ function renderTags(){
     row.appendChild(b);
   }
   const add = document.createElement('button');
-  add.className = 'chip add'; add.textContent = '+ タグ';
+  add.className = 'chip'; add.textContent = '＋';
   add.onclick = () => {
     const t = prompt('タグ名（#は不要）');
     if(t && t.trim()){ tags = [t.trim(), ...tags.filter(x => x !== t.trim())].slice(0,12); LS.set('tags', tags); renderTags(); }
@@ -404,14 +315,14 @@ function renderTags(){
 function fmtBody(s){
   return esc(s).replace(/#([^\s#]+)/g, '<span class="tag">#$1</span>');
 }
-const STATE_LABEL = { pending:'送信待ち', sent:'送信済', done:'PC取込済' };
+const STATE_LABEL = { pending:'送信待ち', sent:'送信済', done:'取込済' };
 function render(){
   const tl = $('#timeline'); tl.innerHTML = '';
   if(!memos.length){
-    tl.innerHTML = `<div class="empty"><span class="big">帖</span>ここに思考が流れていく</div>`;
+    tl.innerHTML = `<div class="empty">メモはまだありません</div>`;
     return;
   }
-  let lastDay = '', i = 0;
+  let lastDay = '';
   for(const m of memos){
     const day = m.createdAt.slice(0,10);
     if(day !== lastDay){
@@ -419,22 +330,21 @@ function render(){
       const d = new Date(day + 'T00:00:00');
       const h = document.createElement('div');
       h.className = 'dayhead';
-      h.innerHTML = `<span class="d">${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）</span>`;
+      h.textContent = `${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`;
       tl.appendChild(h);
     }
     const el = document.createElement('div');
-    el.className = 'memo ' + m.state + (m.task ? ' task' : '');
-    el.style.setProperty('--i', i++);
+    el.className = 'memo';
     el.innerHTML = `
       <div class="memo-head">
         <span class="memo-time">${m.createdAt.slice(11,16)}</span>
-        ${m.task ? '<span class="badge">TASK</span>' : ''}
-        <span class="state ${m.state}"><span class="dot"></span>${STATE_LABEL[m.state]}</span>
+        <span class="state ${m.state}">${STATE_LABEL[m.state]}</span>
+        ${m.state === 'pending' ? '<button class="del">×</button>' : ''}
       </div>
-      <div class="memo-body">${fmtBody(m.content)}</div>
-      <button class="del" title="削除">×</button>`;
-    el.querySelector('.del').onclick = () => {
-      if(m.state === 'pending' && confirm('この未送信メモを削除しますか？')){
+      <div class="memo-body">${m.task ? '<span class="todo">☐ </span>' : ''}${fmtBody(m.content)}</div>`;
+    const del = el.querySelector('.del');
+    if(del) del.onclick = () => {
+      if(confirm('この未送信メモを削除しますか？')){
         memos = memos.filter(x => x.id !== m.id); save(); render();
       }
     };
@@ -443,7 +353,7 @@ function render(){
 }
 function save(){ LS.set('memos', memos.slice(0, 300)) }
 
-/* ---------- composer UI ---------- */
+/* ---------- editor UI ---------- */
 function updateSend(){ $('#btnSend').disabled = !$('#input').value.trim() }
 $('#input').addEventListener('input', e => {
   updateSend(); renderTags();
@@ -451,11 +361,10 @@ $('#input').addEventListener('input', e => {
   e.target.style.height = e.target.scrollHeight + 'px';
 });
 $('#btnSend').onclick = send;
-$('#typeSeg').addEventListener('click', e => {
-  const b = e.target.closest('button'); if(!b) return;
-  type = b.dataset.type;
-  $('#typeSeg').querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
-});
+$('#todoToggle').onclick = () => {
+  todo = !todo;
+  $('#todoToggle').classList.toggle('on', todo);
+};
 
 /* ---------- settings ---------- */
 function openSheet(){
@@ -473,7 +382,7 @@ $('#btnRefresh').onclick = refresh;
 
 /* ---------- init ---------- */
 renderTags(); render(); updateSend();
-if(!cfg.repo || !cfg.token) setTimeout(openSheet, 600);
+if(!cfg.repo || !cfg.token) setTimeout(openSheet, 400);
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
 </body>
