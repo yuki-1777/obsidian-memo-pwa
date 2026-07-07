@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, interactive-widget=resizes-content">
 <title>Memo</title>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -34,7 +34,7 @@
   }
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html, body{height:100%;overflow:hidden;overscroll-behavior:none}
+html, body{height:100%;overflow:hidden;overscroll-behavior:none;position:fixed;width:100%;top:0;left:0}
 body{
   font-family:-apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
   background:var(--bg);
@@ -462,15 +462,23 @@ $('#todoToggle').onclick = () => {
   });
 })();
 
-/* ---------- iOSキーボード対応: visualViewportに合わせて高さを調整 ---------- */
+/* ---------- iOSキーボード対応 ----------
+   フォーカス時にSafariがページ全体を上へ自動スクロールし入力欄が画面外へ
+   飛ぶのを防ぐ。html/bodyをposition:fixedで固定し、可視領域(visualViewport)
+   の高さにappを合わせ、visualViewportのスクロールに追従させる。 */
 if(window.visualViewport){
   const vv = window.visualViewport;
+  const app = document.getElementById('app');
   const fit = () => {
     const wasBottom = nearBottom();
-    document.getElementById('app').style.height = vv.height + 'px';
+    app.style.height = vv.height + 'px';
+    // Safariが動かしたレイアウトスクロールを打ち消して原点に固定
+    window.scrollTo(0, 0);
     if(wasBottom) scrollBottom();
   };
   vv.addEventListener('resize', fit);
+  vv.addEventListener('scroll', fit);
+  fit();
 }
 
 /* ---------- settings ---------- */
