@@ -469,9 +469,14 @@ $('#todoToggle').onclick = () => {
 if(window.visualViewport){
   const vv = window.visualViewport;
   const app = document.getElementById('app');
+  const sheet = document.getElementById('sheet');
   const fit = () => {
     const wasBottom = nearBottom();
     app.style.height = vv.height + 'px';
+    // キーボードの高さ分だけ設定シートを持ち上げ、被らないようにする
+    const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+    sheet.style.bottom = kb + 'px';
+    sheet.style.maxHeight = (vv.height - 24) + 'px';
     // Safariが動かしたレイアウトスクロールを打ち消して原点に固定
     window.scrollTo(0, 0);
     if(wasBottom) scrollBottom();
