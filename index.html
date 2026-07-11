@@ -7,186 +7,78 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Memo">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<meta name="theme-color" content="#f8f8f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#f7f7f8" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1e1e1e" media="(prefers-color-scheme: dark)">
 <style>
 :root{
-  --bg:#f8f8f7;
-  --card:#ffffff;
-  --text:#333333;
-  --sub:#8a8a8a;
-  --border:#e2e2e0;
-  --accent:#5f8b62;
-  --tag:#5b7c99;
+  --bg:#f7f7f8; --card:#fff; --text:#333; --sub:#9a9aa0; --border:#e4e4e7;
+  --accent:#7c5cfa; --tag:#5b7c99; --err:#c25050; --ok:#4c9a5f;
 }
 @media (prefers-color-scheme: dark){
-  :root{
-    --bg:#1e1e1e;
-    --card:#262626;
-    --text:#dcdcdc;
-    --sub:#8a8a8a;
-    --border:#3a3a3a;
-    --accent:#6da571;
-    --tag:#7fa3c4;
-  }
+  :root{ --bg:#1e1e1e; --card:#262626; --text:#dcdcdc; --sub:#8a8a8a; --border:#3a3a3a;
+    --accent:#8f76ff; --tag:#7fa3c4; --err:#d47676; --ok:#6fbf83; }
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html, body{height:100%;overflow:hidden;overscroll-behavior:none;position:fixed;width:100%;top:0;left:0}
-body{
-  font-family:-apple-system, BlinkMacSystemFont, "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
-  background:var(--bg);
-  color:var(--text);
-  font-size:15px;
-  line-height:1.7;
-}
-#app{
-  height:100dvh;
-  max-width:640px;margin:0 auto;
-  display:flex;flex-direction:column;
-}
-
-/* ---------- header ---------- */
-header{
-  display:flex;align-items:center;flex-shrink:0;
-  padding:calc(6px + env(safe-area-inset-top)) 8px 6px 16px;
-  border-bottom:1px solid var(--border);
-}
-header h1{font-size:15px;font-weight:600;flex:1}
-.hbtn{
-  border:none;background:none;color:var(--sub);
-  width:44px;height:44px;display:grid;place-items:center;cursor:pointer;
-}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none;position:fixed;width:100%;top:0;left:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.7}
+#app{height:100dvh;max-width:640px;margin:0 auto;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:2px;flex-shrink:0;padding:calc(6px + env(safe-area-inset-top)) 6px 6px 16px;border-bottom:1px solid var(--border)}
+header h1{font-size:15px;font-weight:600;flex:1;display:flex;align-items:center;gap:8px}
+#dot{width:8px;height:8px;border-radius:50%;background:var(--sub)}
+#dot.on{background:var(--ok)}
+.hbtn{border:none;background:none;color:var(--sub);width:44px;height:44px;display:grid;place-items:center;cursor:pointer}
 .hbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .hbtn.spin svg{animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* ---------- timeline (scroll area) ---------- */
-#scroll{
-  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
-  padding:0 14px;
-  overscroll-behavior:contain;
-}
-#ptr{
-  height:0;overflow:hidden;
-  display:flex;align-items:flex-end;justify-content:center;
-  color:var(--sub);font-size:12px;
-  transition:height .2s;
-}
+#scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 14px;overscroll-behavior:contain}
+#ptr{height:0;overflow:hidden;display:flex;align-items:flex-end;justify-content:center;color:var(--sub);font-size:12px;transition:height .2s}
 #ptr.pulling{transition:none}
-.dayhead{
-  position:sticky;top:0;z-index:5;
-  text-align:center;padding:8px 0 6px;
-  background:var(--bg);
-  font-size:12px;color:var(--sub);
-}
-.memo{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:8px;
-  padding:8px 12px;
-  margin-bottom:8px;
-}
-.memo-body{white-space:pre-wrap;word-break:break-word}
-.memo-body .tag{color:var(--tag)}
-.memo-body .todo{color:var(--sub)}
-.memo-foot{
-  display:flex;align-items:center;gap:8px;margin-top:2px;
-}
-.memo-time{font-size:11px;color:var(--sub)}
-.state{margin-left:auto;font-size:11px;color:var(--sub)}
-.state.done{color:var(--accent)}
-.state.pending{text-decoration:underline;cursor:pointer}
-.memo .del{
-  border:none;background:none;color:var(--sub);font-size:13px;cursor:pointer;
-  padding:2px 6px;margin-right:-6px;
-}
-.empty{text-align:center;color:var(--sub);padding:48px 0;font-size:13px}
-#bottomPad{height:10px}
-
-/* ---------- composer (bottom fixed in flow) ---------- */
-.composer{
-  flex-shrink:0;
-  border-top:1px solid var(--border);
-  background:var(--bg);
-  padding:8px 10px calc(8px + env(safe-area-inset-bottom));
-}
-.suggest{
-  display:none;flex-wrap:wrap;gap:6px;padding:0 2px 8px;
-}
+.dayhead{position:sticky;top:0;z-index:5;text-align:center;padding:10px 0 6px;background:var(--bg);font-size:12px;color:var(--sub)}
+.memo{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 13px;margin-bottom:8px}
+.mhead{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--sub);margin-bottom:2px}
+.mhead .pend{color:var(--err)}
+.mbody{white-space:pre-wrap;word-break:break-word;font-size:14.5px}
+.mbody .tag{color:var(--tag)}
+.mbody .todo{color:var(--sub)}
+.mbody a{color:var(--tag)}
+.empty{text-align:center;color:var(--sub);padding:44px 0;font-size:13px}
+#bottomPad{height:8px}
+.banner{display:none;align-items:center;gap:8px;margin:10px 0;padding:9px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:12.5px;color:var(--sub)}
+.banner.show{display:flex}
+.banner .re{margin-left:auto;border:1px solid var(--border);background:none;color:var(--text);border-radius:6px;padding:4px 12px;font-size:12px;font-family:inherit;cursor:pointer}
+.composer{flex-shrink:0;border-top:1px solid var(--border);background:var(--bg);padding:8px 10px calc(8px + env(safe-area-inset-bottom))}
+.suggest{display:none;flex-wrap:wrap;gap:6px;padding:0 2px 8px}
 .suggest.open{display:flex}
-.suggest button{
-  border:1px solid var(--border);background:var(--card);color:var(--tag);
-  border-radius:14px;padding:4px 12px;font-size:13px;font-family:inherit;cursor:pointer;
-  white-space:nowrap;min-height:30px;
-}
-.bar{
-  display:flex;align-items:flex-end;gap:6px;
-}
-.todo-toggle{
-  flex-shrink:0;border:none;background:none;color:var(--sub);cursor:pointer;
-  width:40px;height:40px;display:grid;place-items:center;
-}
-.todo-toggle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.todo-toggle.on{color:var(--accent)}
-.inputwrap{
-  flex:1;background:var(--card);
-  border:1px solid var(--border);border-radius:18px;
-  padding:7px 14px;
-  display:flex;align-items:center;
-}
-textarea{
-  width:100%;border:none;outline:none;background:transparent;resize:none;
-  font:inherit;color:var(--text);
-  line-height:1.55;max-height:132px;
-  display:block;
-}
+.suggest button{border:1px solid var(--border);background:var(--card);color:var(--tag);border-radius:14px;padding:4px 12px;font-size:13px;font-family:inherit;cursor:pointer;min-height:30px}
+.bar{display:flex;align-items:flex-end;gap:6px}
+.ibtn{flex-shrink:0;border:none;background:none;color:var(--sub);cursor:pointer;width:40px;height:40px;display:grid;place-items:center;font-size:18px;font-family:inherit}
+.ibtn.on{color:var(--accent)}
+.ibtn svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.inputwrap{flex:1;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:7px 14px;display:flex;align-items:center}
+textarea{width:100%;border:none;outline:none;background:transparent;resize:none;font:inherit;color:var(--text);line-height:1.55;max-height:132px;display:block}
 textarea::placeholder{color:var(--sub);opacity:.7}
-.send{
-  flex-shrink:0;border:none;background:var(--accent);color:#fff;cursor:pointer;
-  width:40px;height:40px;border-radius:50%;display:grid;place-items:center;
-}
+.send{flex-shrink:0;border:none;background:var(--accent);color:#fff;cursor:pointer;width:40px;height:40px;border-radius:50%;display:grid;place-items:center}
 .send:disabled{opacity:.4}
 .send svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-
-/* ---------- settings ---------- */
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:30;opacity:0;pointer-events:none;transition:opacity .2s}
 .scrim.open{opacity:1;pointer-events:auto}
-.sheet{
-  position:fixed;left:0;right:0;bottom:0;z-index:31;max-width:640px;margin:0 auto;
-  background:var(--card);border:1px solid var(--border);border-bottom:none;
-  border-radius:12px 12px 0 0;padding:18px 18px calc(26px + env(safe-area-inset-bottom));
-  transform:translateY(105%);transition:transform .25s ease;
-  max-height:85dvh;overflow-y:auto;
-}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:31;max-width:640px;margin:0 auto;background:var(--card);border:1px solid var(--border);border-bottom:none;border-radius:12px 12px 0 0;padding:18px 18px calc(26px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .25s ease;max-height:85dvh;overflow-y:auto}
 .sheet.open{transform:none}
 .sheet h2{font-size:14px;margin-bottom:4px}
 .sheet .note{font-size:12px;color:var(--sub);margin-bottom:10px}
 .sheet label{display:block;font-size:12px;color:var(--sub);margin:10px 0 4px}
-.sheet input, .sheet textarea{
-  width:100%;border:1px solid var(--border);border-radius:6px;background:var(--bg);
-  padding:9px 10px;font-size:14px;color:var(--text);font-family:inherit;outline:none;
-  resize:none;min-height:auto;max-height:none;
-}
-.sheet .save{
-  margin-top:16px;width:100%;border:none;background:var(--accent);color:#fff;
-  font-size:13px;font-weight:600;font-family:inherit;padding:12px;border-radius:6px;cursor:pointer;
-}
-.toast{
-  position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-10px);
-  background:var(--text);color:var(--bg);padding:8px 16px;border-radius:6px;
-  font-size:12.5px;opacity:0;transition:all .25s;z-index:40;pointer-events:none;
-  max-width:86vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
+.sheet input,.sheet textarea{width:100%;border:1px solid var(--border);border-radius:6px;background:var(--bg);padding:9px 10px;font-size:14px;color:var(--text);font-family:inherit;outline:none;resize:none}
+.sheet .save{margin-top:16px;width:100%;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:600;font-family:inherit;padding:12px;border-radius:8px;cursor:pointer}
+.toast{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-10px);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:6px;font-size:12.5px;opacity:0;transition:all .25s;z-index:40;pointer-events:none;max-width:86vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 </style>
 </head>
 <body>
 <div id="app">
   <header>
-    <h1>Memo</h1>
+    <h1><span id="dot"></span>Memo</h1>
     <button class="hbtn" id="btnRefresh" aria-label="更新">
       <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 3v5h-5"/></svg>
     </button>
@@ -197,6 +89,7 @@ textarea::placeholder{color:var(--sub);opacity:.7}
 
   <div id="scroll">
     <div id="ptr">離して更新</div>
+    <div class="banner" id="banner"><span id="bannerText">未接続 — メモは端末に保存され、後で送信されます</span><button class="re" id="btnReconnect">再接続</button></div>
     <div id="timeline"></div>
     <div id="bottomPad"></div>
   </div>
@@ -204,12 +97,10 @@ textarea::placeholder{color:var(--sub);opacity:.7}
   <div class="composer">
     <div class="suggest" id="suggest"></div>
     <div class="bar">
-      <button class="todo-toggle" id="todoToggle" aria-label="TODOとして送信">
+      <button class="ibtn" id="btnTodo" aria-label="TODOとして送信">
         <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 12l2.2 2.2L15.5 9.5"/></svg>
       </button>
-      <div class="inputwrap">
-        <textarea id="input" rows="1" placeholder="What do you think now..."></textarea>
-      </div>
+      <div class="inputwrap"><textarea id="input" rows="1" placeholder="What do you think now..."></textarea></div>
       <button class="send" id="btnSend" disabled aria-label="送信">
         <svg viewBox="0 0 24 24"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
       </button>
@@ -219,14 +110,14 @@ textarea::placeholder{color:var(--sub);opacity:.7}
   <div class="scrim" id="scrim"></div>
   <div class="sheet" id="sheet">
     <h2>設定</h2>
-    <p class="note">メモは自分のプライベートGitHubリポジトリに送信し、PCのObsidianプラグインが自動で取り込みます。トークンはこの端末にのみ保存されます。</p>
-    <label>GitHub リポジトリ（owner/repo）</label>
-    <input id="cfgRepo" placeholder="yuki-1777/obsidian-memo-inbox" autocapitalize="off" autocorrect="off">
-    <label>Fine-grained Personal Access Token（Contents: Read and write）</label>
-    <input id="cfgToken" type="password" placeholder="github_pat_…" autocapitalize="off" autocorrect="off">
-    <label>タグ（改行区切り。#入力時の候補に出ます）</label>
+    <p class="note">Obsidianプラグインのローカルサーバー（HTTPS）に直接書き込みます。メモはクラウドを経由しません。オフライン時は端末に保存され、接続できたとき自動送信されます。</p>
+    <label>サーバーURL（例: https://cntmac801.local:8928）</label>
+    <input id="cfgBase" placeholder="https://xxxxx.local:8928" autocapitalize="off" autocorrect="off" inputmode="url">
+    <label>接続トークン</label>
+    <input id="cfgToken" type="password" placeholder="プラグイン設定からコピー" autocapitalize="off" autocorrect="off">
+    <label>タグ（改行区切り。#入力時の候補）</label>
     <textarea id="cfgTags" rows="4" autocapitalize="off" autocorrect="off"></textarea>
-    <button class="save" id="btnSave">保存</button>
+    <button class="save" id="btnSave">保存して接続確認</button>
   </div>
 
   <div class="toast" id="toast"></div>
@@ -234,279 +125,129 @@ textarea::placeholder{color:var(--sub);opacity:.7}
 
 <script>
 const $ = s => document.querySelector(s);
-const LS = {
-  get(k, d){ try{ return JSON.parse(localStorage.getItem(k)) ?? d }catch{ return d } },
-  set(k, v){ localStorage.setItem(k, JSON.stringify(v)) },
-};
-let cfg   = LS.get('cfg', { repo:'', token:'' });
-let memos = LS.get('memos', []);           // 新しい順 {id, createdAt, content, task, state, path}
+const LS = { get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}}, set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)) };
+let cfg   = LS.get('cfg', { base:'', token:'' });
 let tags  = LS.get('tags', ['タスク','toai','雑談']);
+let queue = LS.get('queue', []);
 let todo  = false;
-
-/* ---------- helpers ---------- */
-function nowISO(){
-  const d = new Date(), p = n => String(n).padStart(2,'0');
-  const off = -d.getTimezoneOffset(), sg = off >= 0 ? '+' : '-', a = Math.abs(off);
-  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${sg}${p(a/60|0)}:${p(a%60)}`;
-}
-function b64(s){ return btoa(Array.from(new TextEncoder().encode(s), b => String.fromCharCode(b)).join('')) }
-function esc(s){ return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])) }
-function toast(msg){
-  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
-  clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('show'), 2600);
-}
+let connected = false;
+let inboxCache = [];
 const WD = ['日','月','火','水','木','金','土'];
-function scrollBottom(){
-  const sc = $('#scroll'); sc.scrollTop = sc.scrollHeight;
-}
-function nearBottom(){
-  const sc = $('#scroll');
-  return sc.scrollHeight - sc.scrollTop - sc.clientHeight < 120;
-}
 
-/* ---------- GitHub API ---------- */
-function gh(path, opt = {}){
-  return fetch(`https://api.github.com/repos/${cfg.repo}/${path}`, {
-    ...opt,
-    headers:{
-      'Authorization':`Bearer ${cfg.token}`,
-      'Accept':'application/vnd.github+json',
-      'X-GitHub-Api-Version':'2022-11-28',
-      ...(opt.body ? {'Content-Type':'application/json'} : {}),
-    },
-  });
-}
-async function upload(m){
-  const name = m.createdAt.slice(0,19).replace(/[-:T]/g,'') + '-' + m.id.slice(0,4);
-  const path = `inbox/${name}.json`;
-  const body = { message:`memo ${name}`, content:b64(JSON.stringify({
-    id:m.id, createdAt:m.createdAt, content:m.content, task:m.task }, null, 2)) };
-  const r = await gh(`contents/${encodeURIComponent(path)}`, { method:'PUT', body:JSON.stringify(body) });
-  if(!r.ok) throw new Error(`GitHub ${r.status}`);
-  m.path = path; m.state = 'sent';
-}
+function uuid(){if(crypto.randomUUID)return crypto.randomUUID();const b=crypto.getRandomValues(new Uint8Array(16));b[6]=(b[6]&0x0f)|0x40;b[8]=(b[8]&0x3f)|0x80;const h=[...b].map(x=>x.toString(16).padStart(2,'0'));return `${h.slice(0,4).join('')}-${h.slice(4,6).join('')}-${h.slice(6,8).join('')}-${h.slice(8,10).join('')}-${h.slice(10,16).join('')}`;}
+function nowISO(){const d=new Date(),p=n=>String(n).padStart(2,'0');const o=-d.getTimezoneOffset(),s=o>=0?'+':'-',a=Math.abs(o);return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}${s}${p(a/60|0)}:${p(a%60)}`;}
+function today(){return nowISO().slice(0,10)}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600);}
+function scrollBottom(){const s=$('#scroll');s.scrollTop=s.scrollHeight;}
+function nearBottom(){const s=$('#scroll');return s.scrollHeight-s.scrollTop-s.clientHeight<120;}
+function saveQueue(){LS.set('queue',queue);}
 
-/* ---------- send ---------- */
+/* ---------- API（設定したローカルHTTPSサーバー） ---------- */
+function api(path,opt={}){
+  const base=(cfg.base||'').replace(/\/$/,'');
+  return fetch(base+path,{...opt,headers:{'X-Memo-Token':cfg.token,...(opt.body?{'Content-Type':'application/json'}:{})}});
+}
+async function ping(){
+  if(!cfg.base||!cfg.token){connected=false;}
+  else{try{const r=await api('/ping');connected=r.ok;}catch(e){connected=false;}}
+  $('#dot').classList.toggle('on',connected);
+  $('#banner').classList.toggle('show',!connected&&(queue.length>0||!cfg.base));
+  return connected;
+}
+async function postMemo(m){const r=await api('/memo',{method:'POST',body:JSON.stringify({content:m.content,task:m.task,createdAt:m.createdAt})});if(!r.ok)throw new Error(`API ${r.status}`);}
+
+/* ---------- 送信・保留（オフラインでも必ず端末に残す） ---------- */
 async function send(){
-  const text = $('#input').value.trim();
-  if(!text) return;
-  if(!cfg.repo || !cfg.token){ openSheet(); toast('先にGitHubの設定をしてください'); return; }
-  const m = { id:crypto.randomUUID(), createdAt:nowISO(), content:text, task:todo, state:'pending' };
-  memos.unshift(m); save(); render(); scrollBottom();
-  const ta = $('#input');
-  ta.value = ''; ta.style.height = 'auto'; updateSend(); renderSuggest();
-  harvestTags(text);
-  try{ await upload(m); save(); render(); }
-  catch(e){ toast('送信失敗 — 送信待ちをタップで再送できます'); }
+  const text=$('#input').value.trim();
+  if(!text)return;
+  const m={id:uuid(),createdAt:nowISO(),content:text,task:todo};
+  const clear=()=>{const ta=$('#input');ta.value='';ta.style.height='auto';todo=false;$('#btnTodo').classList.remove('on');harvestTags(text);updateSend();renderSuggest();};
+  // まず端末キューに積む（確実に残す）
+  queue.push(m); saveQueue(); clear(); render(); scrollBottom();
+  // 送れるなら即送信
+  try{ await postMemo(m); queue=queue.filter(x=>x.id!==m.id); saveQueue(); await refresh(); toast('Obsidianに書き込みました'); }
+  catch(e){ await ping(); render(); toast('未接続 — 端末に保存しました（↻で送信）'); }
 }
-async function retry(m){
-  if(m.state !== 'pending') return;
-  try{ await upload(m); save(); render(); toast('送信しました'); }
-  catch(e){ toast('送信失敗 — 通信状態かトークンを確認してください'); }
-}
-async function retryPending(){
-  for(const m of memos.filter(m => m.state === 'pending')){
-    try{ await upload(m); }catch{}
-  }
-  save();
-}
+async function flushQueue(){let n=0;while(queue.length){try{await postMemo(queue[0]);queue.shift();saveQueue();n++;}catch(e){break;}}return n;}
 
-/* ---------- refresh (check what PC imported) ---------- */
 async function refresh(){
-  if(!cfg.repo || !cfg.token){ openSheet(); return; }
-  const btn = $('#btnRefresh'); btn.classList.add('spin');
-  try{
-    await retryPending();
-    const r = await gh('contents/inbox');
-    if(!r.ok && r.status !== 404) throw new Error(r.status);
-    const listed = r.ok ? new Set((await r.json()).map(f => `inbox/${f.name}`)) : new Set();
-    let imported = 0;
-    for(const m of memos){
-      if(m.state === 'sent' && m.path && !listed.has(m.path)){ m.state = 'done'; imported++; }
-    }
-    save(); render();
-    toast(imported ? `${imported}件がPCに取り込まれました` : '最新の状態です');
-  }catch(e){ toast('確認に失敗しました'); }
+  const btn=$('#btnRefresh');btn.classList.add('spin');
+  const ok=await ping();
+  if(ok){
+    const n=await flushQueue();
+    if(n)toast(`保存していた${n}件を送信しました`);
+    try{const r=await api(`/inbox?date=${today()}`);const j=await r.json();inboxCache=j.memos||[];}catch(e){inboxCache=[];}
+  }
+  render();
   btn.classList.remove('spin');
 }
 
-/* ---------- tags (X風: #入力でサジェスト) ---------- */
-function harvestTags(text){
-  const found = [...text.matchAll(/#([^\s#]+)/g)].map(m => m[1]);
-  for(const t of found){ tags = [t, ...tags.filter(x => x !== t)]; }
-  tags = tags.slice(0, 30); LS.set('tags', tags);
-}
-function activeToken(){
-  const ta = $('#input');
-  const before = ta.value.slice(0, ta.selectionStart ?? ta.value.length);
-  const m = before.match(/(^|[\s　])#([^\s　#]*)$/);
-  return m ? { query: m[2], start: before.length - m[2].length - 1 } : null;
-}
+/* ---------- tags ---------- */
+function harvestTags(text){const f=[...String(text).matchAll(/#([^\s#]+)/g)].map(m=>m[1]);for(const t of f)tags=[t,...tags.filter(x=>x!==t)];tags=tags.slice(0,30);LS.set('tags',tags);}
+function activeToken(){const ta=$('#input');const b=ta.value.slice(0,ta.selectionStart??ta.value.length);const m=b.match(/(^|[\s　])#([^\s　#]*)$/);return m?{query:m[2],start:b.length-m[2].length-1}:null;}
 function renderSuggest(){
-  const box = $('#suggest');
-  const tok = activeToken();
-  if(!tok){ box.classList.remove('open'); box.innerHTML = ''; return; }
-  const q = tok.query;
-  const hits = tags.filter(t => t !== q && (q === '' || t.toLowerCase().includes(q.toLowerCase()))).slice(0, 8);
-  if(!hits.length){ box.classList.remove('open'); box.innerHTML = ''; return; }
-  box.innerHTML = '';
-  for(const t of hits){
-    const b = document.createElement('button');
-    b.textContent = `#${t}`;
-    b.onmousedown = e => e.preventDefault();
-    b.onclick = () => insertTag(t);
-    box.appendChild(b);
-  }
+  const box=$('#suggest');const tok=activeToken();
+  if(!tok){box.classList.remove('open');box.innerHTML='';return;}
+  const q=tok.query;const hits=tags.filter(t=>t!==q&&(q===''||t.toLowerCase().includes(q.toLowerCase()))).slice(0,8);
+  if(!hits.length){box.classList.remove('open');box.innerHTML='';return;}
+  box.innerHTML='';
+  for(const t of hits){const b=document.createElement('button');b.textContent=`#${t}`;b.onmousedown=e=>e.preventDefault();b.onclick=()=>insertTag(t);box.appendChild(b);}
   box.classList.add('open');
 }
-function insertTag(t){
-  const ta = $('#input');
-  const tok = activeToken();
-  if(!tok) return;
-  const caret = ta.selectionStart ?? ta.value.length;
-  ta.value = ta.value.slice(0, tok.start) + `#${t} ` + ta.value.slice(caret);
-  const pos = tok.start + t.length + 2;
-  ta.focus(); ta.setSelectionRange(pos, pos);
-  updateSend(); renderSuggest();
-}
+function insertTag(t){const ta=$('#input');const tok=activeToken();if(!tok)return;const c=ta.selectionStart??ta.value.length;ta.value=ta.value.slice(0,tok.start)+`#${t} `+ta.value.slice(c);const p=tok.start+t.length+2;ta.focus();ta.setSelectionRange(p,p);updateSend();renderSuggest();}
 
-/* ---------- render (古い順に上→下、最新が入力欄のすぐ上) ---------- */
-function fmtBody(s){
-  return esc(s).replace(/#([^\s#]+)/g, '<span class="tag">#$1</span>');
-}
-const STATE_LABEL = { pending:'送信待ち・タップで再送', sent:'送信済', done:'取込済' };
+/* ---------- render（古い順・最新が下） ---------- */
+function fmtBody(s){let h=esc(s);h=h.replace(/\[([^\]]*)\]\((https?:[^\s)]+)\)/g,(_,t,u)=>`<a href="${u}" target="_blank" rel="noopener">${t||u}</a>`);h=h.replace(/(^|[\s　>])#([^\s#<]+)/g,`$1<span class="tag">#$2</span>`);return h;}
+function card(time,content,task,pending){const el=document.createElement('div');el.className='memo';el.innerHTML=`<div class="mhead"><span>${time}</span>${pending?'<span class="pend">送信待ち</span>':''}</div><div class="mbody">${task?'<span class="todo">☐ </span>':''}${fmtBody(content)}</div>`;return el;}
 function render(){
-  const tl = $('#timeline'); tl.innerHTML = '';
-  if(!memos.length){
-    tl.innerHTML = `<div class="empty">メモはまだありません</div>`;
-    return;
-  }
-  const asc = [...memos].reverse();
-  let lastDay = '';
-  for(const m of asc){
-    const day = m.createdAt.slice(0,10);
-    if(day !== lastDay){
-      lastDay = day;
-      const d = new Date(day + 'T00:00:00');
-      const h = document.createElement('div');
-      h.className = 'dayhead';
-      h.textContent = `${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`;
-      tl.appendChild(h);
-    }
-    const el = document.createElement('div');
-    el.className = 'memo';
-    el.innerHTML = `
-      <div class="memo-body">${m.task ? '<span class="todo">☐ </span>' : ''}${fmtBody(m.content)}</div>
-      <div class="memo-foot">
-        <span class="memo-time">${m.createdAt.slice(11,16)}</span>
-        <span class="state ${m.state}">${STATE_LABEL[m.state]}</span>
-        ${m.state === 'pending' ? '<button class="del">×</button>' : ''}
-      </div>`;
-    const st = el.querySelector('.state');
-    if(m.state === 'pending') st.onclick = () => retry(m);
-    const del = el.querySelector('.del');
-    if(del) del.onclick = () => {
-      if(confirm('この未送信メモを削除しますか？')){
-        memos = memos.filter(x => x.id !== m.id); save(); render();
-      }
-    };
-    tl.appendChild(el);
-  }
+  const tl=$('#timeline');tl.innerHTML='';
+  const items=[...inboxCache.map(m=>({time:m.time,content:m.content,task:m.task,pending:false})),
+    ...queue.map(m=>({time:m.createdAt.slice(11,16),content:m.content,task:m.task,pending:true}))];
+  if(!items.length){tl.innerHTML=`<div class="empty">今日のメモはまだありません</div>`;return;}
+  const h=document.createElement('div');h.className='dayhead';const d=new Date(today()+'T00:00:00');h.textContent=`${d.getMonth()+1}月${d.getDate()}日（${WD[d.getDay()]}）`;tl.appendChild(h);
+  for(const m of items)tl.appendChild(card(m.time,m.content,m.task,m.pending));
 }
-function save(){ LS.set('memos', memos.slice(0, 300)) }
 
 /* ---------- composer UI ---------- */
-function updateSend(){ $('#btnSend').disabled = !$('#input').value.trim() }
-$('#input').addEventListener('input', e => {
-  updateSend(); renderSuggest();
-  e.target.style.height = 'auto';
-  e.target.style.height = e.target.scrollHeight + 'px';
-});
-$('#input').addEventListener('click', renderSuggest);
-$('#input').addEventListener('keyup', e => {
-  if(['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)) renderSuggest();
-});
-$('#input').addEventListener('focus', () => setTimeout(scrollBottom, 300));
-$('#input').addEventListener('blur', () => setTimeout(() => {
-  if(document.activeElement !== $('#input')){ $('#suggest').classList.remove('open'); }
-}, 150));
-$('#btnSend').onclick = send;
-$('#todoToggle').onclick = () => {
-  todo = !todo;
-  $('#todoToggle').classList.toggle('on', todo);
-};
+function updateSend(){$('#btnSend').disabled=!$('#input').value.trim();}
+$('#input').addEventListener('input',e=>{updateSend();renderSuggest();e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,132)+'px';});
+$('#input').addEventListener('click',renderSuggest);
+$('#input').addEventListener('focus',()=>setTimeout(scrollBottom,300));
+$('#btnSend').onclick=send;
+$('#btnTodo').onclick=()=>{todo=!todo;$('#btnTodo').classList.toggle('on',todo);};
+$('#btnRefresh').onclick=refresh;
+$('#btnReconnect').onclick=refresh;
 
 /* ---------- pull to refresh ---------- */
-(() => {
-  const sc = $('#scroll'), ptr = $('#ptr');
-  let startY = null, pull = 0;
-  const THRESH = 64;
-  sc.addEventListener('touchstart', e => {
-    startY = sc.scrollTop <= 0 ? e.touches[0].clientY : null;
-    pull = 0;
-  }, { passive:true });
-  sc.addEventListener('touchmove', e => {
-    if(startY === null) return;
-    pull = Math.max(0, (e.touches[0].clientY - startY) * .5);
-    if(pull > 0){
-      ptr.classList.add('pulling');
-      ptr.style.height = Math.min(pull, 90) + 'px';
-      ptr.textContent = pull >= THRESH ? '離して更新' : '引っ張って更新';
-    }
-  }, { passive:true });
-  sc.addEventListener('touchend', () => {
-    ptr.classList.remove('pulling');
-    ptr.style.height = '0px';
-    if(pull >= THRESH) refresh();
-    startY = null; pull = 0;
-  });
+(()=>{const sc=$('#scroll'),ptr=$('#ptr');let sy=null,pull=0;const TH=64;
+  sc.addEventListener('touchstart',e=>{sy=sc.scrollTop<=0?e.touches[0].clientY:null;pull=0;},{passive:true});
+  sc.addEventListener('touchmove',e=>{if(sy===null)return;pull=Math.max(0,(e.touches[0].clientY-sy)*.5);if(pull>0){ptr.classList.add('pulling');ptr.style.height=Math.min(pull,90)+'px';ptr.textContent=pull>=TH?'離して更新':'引っ張って更新';}},{passive:true});
+  sc.addEventListener('touchend',()=>{ptr.classList.remove('pulling');ptr.style.height='0px';if(pull>=TH)refresh();sy=null;pull=0;});
 })();
 
-/* ---------- iOSキーボード対応 ----------
-   フォーカス時にSafariがページ全体を上へ自動スクロールし入力欄が画面外へ
-   飛ぶのを防ぐ。html/bodyをposition:fixedで固定し、可視領域(visualViewport)
-   の高さにappを合わせ、visualViewportのスクロールに追従させる。 */
+/* ---------- iOSキーボード対応 ---------- */
 if(window.visualViewport){
-  const vv = window.visualViewport;
-  const app = document.getElementById('app');
-  const sheet = document.getElementById('sheet');
-  const fit = () => {
-    const wasBottom = nearBottom();
-    app.style.height = vv.height + 'px';
-    // キーボードの高さ分だけ設定シートを持ち上げ、被らないようにする
-    const kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-    sheet.style.bottom = kb + 'px';
-    sheet.style.maxHeight = (vv.height - 24) + 'px';
-    // Safariが動かしたレイアウトスクロールを打ち消して原点に固定
-    window.scrollTo(0, 0);
-    if(wasBottom) scrollBottom();
-  };
-  vv.addEventListener('resize', fit);
-  vv.addEventListener('scroll', fit);
-  fit();
+  const vv=window.visualViewport,app=$('#app'),sheet=$('#sheet');
+  const fit=()=>{const wb=nearBottom();app.style.height=vv.height+'px';const kb=Math.max(0,window.innerHeight-vv.height-vv.offsetTop);sheet.style.bottom=kb+'px';sheet.style.maxHeight=(vv.height-24)+'px';window.scrollTo(0,0);if(wb)scrollBottom();};
+  vv.addEventListener('resize',fit);vv.addEventListener('scroll',fit);fit();
 }
 
 /* ---------- settings ---------- */
-function openSheet(){
-  $('#cfgRepo').value = cfg.repo; $('#cfgToken').value = cfg.token;
-  $('#cfgTags').value = tags.join('\n');
-  $('#scrim').classList.add('open'); $('#sheet').classList.add('open');
-}
-function closeSheet(){ $('#scrim').classList.remove('open'); $('#sheet').classList.remove('open') }
-$('#btnSettings').onclick = openSheet;
-$('#scrim').onclick = closeSheet;
-$('#btnSave').onclick = () => {
-  cfg = { repo:$('#cfgRepo').value.trim(), token:$('#cfgToken').value.trim() };
-  LS.set('cfg', cfg);
-  tags = $('#cfgTags').value.split('\n').map(t => t.trim().replace(/^#/, '')).filter(Boolean).slice(0, 30);
-  LS.set('tags', tags);
-  closeSheet(); toast('保存しました');
+function openSheet(){$('#cfgBase').value=cfg.base;$('#cfgToken').value=cfg.token;$('#cfgTags').value=tags.join('\n');$('#scrim').classList.add('open');$('#sheet').classList.add('open');}
+function closeSheet(){$('#scrim').classList.remove('open');$('#sheet').classList.remove('open');}
+$('#btnSettings').onclick=openSheet;
+$('#scrim').onclick=closeSheet;
+$('#btnSave').onclick=async()=>{
+  cfg={base:$('#cfgBase').value.trim().replace(/\/$/,''),token:$('#cfgToken').value.trim()};LS.set('cfg',cfg);
+  tags=$('#cfgTags').value.split('\n').map(t=>t.trim().replace(/^#/,'')).filter(Boolean).slice(0,30);LS.set('tags',tags);
+  closeSheet();await refresh();
+  toast(connected?'接続しました':'接続できません — URL・トークン・証明書を確認');
 };
-$('#btnRefresh').onclick = refresh;
 
 /* ---------- init ---------- */
-render(); updateSend(); scrollBottom();
-if(!cfg.repo || !cfg.token) setTimeout(openSheet, 400);
+render();updateSend();
+(async()=>{await refresh();if(!cfg.base||!cfg.token)setTimeout(openSheet,400);})();
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
 </script>
 </body>
