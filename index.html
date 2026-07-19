@@ -39,10 +39,22 @@ header h1{font-size:15px;font-weight:600;flex:1;display:flex;align-items:center;
 .memo{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:9px 13px;margin-bottom:8px}
 .mhead{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--sub);margin-bottom:2px}
 .mhead .pend{color:var(--err)}
-.mbody{white-space:pre-wrap;word-break:break-word;font-size:14.5px}
+.mbody{word-break:break-word;font-size:14.5px}
 .mbody .tag{color:var(--tag)}
 .mbody .todo{color:var(--sub)}
 .mbody a{color:var(--tag)}
+.mbody .tl{white-space:pre-wrap}
+.mbody .bq{border-left:3px solid var(--sub);padding-left:9px;margin:2px 0;color:var(--sub);white-space:pre-wrap}
+.mbody .bl{margin:2px 0;padding-left:20px}
+.mbody .bl .bl{margin:0}
+.mbody .bl li{white-space:pre-wrap}
+.mbody .bl li.ct,.mbody .bl li.cb{list-style:none}
+.mbody .ck{color:var(--sub)}
+.mbody .hd{font-weight:600;margin:2px 0}
+.mbody .hd.h1{font-size:1.15em}
+.mbody .hd.h2{font-size:1.08em}
+.mbody code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.9em;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:0 4px}
+.mbody del{color:var(--sub)}
 .empty{text-align:center;color:var(--sub);padding:44px 0;font-size:13px}
 #bottomPad{height:8px}
 .banner{display:none;align-items:center;gap:8px;margin:10px 0;padding:9px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:12.5px;color:var(--sub)}
@@ -198,8 +210,64 @@ function renderSuggest(){
 function insertTag(t){const ta=$('#input');const tok=activeToken();if(!tok)return;const c=ta.selectionStart??ta.value.length;ta.value=ta.value.slice(0,tok.start)+`#${t} `+ta.value.slice(c);const p=tok.start+t.length+2;ta.focus();ta.setSelectionRange(p,p);updateSend();renderSuggest();}
 
 /* ---------- render（古い順・最新が下） ---------- */
-function fmtBody(s){let h=esc(s);h=h.replace(/\[([^\]]*)\]\((https?:[^\s)]+)\)/g,(_,t,u)=>`<a href="${u}" target="_blank" rel="noopener">${t||u}</a>`);h=h.replace(/(^|[\s　>])#([^\s#<]+)/g,`$1<span class="tag">#$2</span>`);return h;}
-function card(time,content,task,pending){const el=document.createElement('div');el.className='memo';el.innerHTML=`<div class="mhead"><span>${time}</span>${pending?'<span class="pend">送信待ち</span>':''}</div><div class="mbody">${task?'<span class="todo">☐ </span>':''}${fmtBody(content)}</div>`;return el;}
+/* カードの記法整形はChrome拡張（sidepanel.js）と同一ロジック */
+function inlineFmt(s){
+  let h=esc(s);
+  h=h.replace(/`([^`\n]+)`/g,'<code>$1</code>');
+  h=h.replace(/\[([^\]]*)\]\((https?:[^\s)]+)\)/g,(_,t,u)=>`<a href="${u}" target="_blank" rel="noopener">${t||u}</a>`);
+  h=h.replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>');
+  h=h.replace(/~~([^~\n]+)~~/g,'<del>$1</del>');
+  h=h.replace(/(^|[\s　>])#([^\s#<]+)/g,`$1<span class="tag">#$2</span>`);
+  return h;
+}
+const LIST_RE=/^([-*+]|\d+[.)])\s+(?:\[([ xX])\]\s*)?(.*)$/;
+function parseLine(raw){
+  const ind=raw.match(/^[\t ]*/)[0];
+  let level=0,run=0;
+  for(const ch of ind){ if(ch==='\t'){level++;run=0;} else if(++run===2){level++;run=0;} }
+  return {level,rest:raw.slice(ind.length),raw};
+}
+function renderList(items){
+  let html='';const stack=[];
+  for(const it of items){
+    const tag=it.ordered?'ol':'ul';
+    while(stack.length>it.level+1)html+=`</li></${stack.pop()}>`;
+    if(stack.length===it.level+1&&stack[stack.length-1]!==tag)html+=`</li></${stack.pop()}>`;
+    if(stack.length===it.level+1){html+='</li>';}
+    else{while(stack.length<it.level+1){html+=`<${tag} class="bl"${it.ordered&&it.num>1?` start="${it.num}"`:''}>`;stack.push(tag);if(stack.length<it.level+1)html+='<li class="ct">';}}
+    html+=`<li${it.check?' class="cb"':''}>${it.check?`<span class="ck">${it.done?'☑':'☐'}</span> `:''}${it.html}`;
+  }
+  while(stack.length)html+=`</li></${stack.pop()}>`;
+  return html;
+}
+function fmtBody(s,task){
+  const lines=String(s).split('\n').map(parseLine);
+  let out='',i=0;
+  let todo=task?'<span class="todo">☐</span> ':'';
+  if(todo&&lines[0]&&(/^>\s?/.test(lines[0].rest)||/^#{1,6}\s/.test(lines[0].rest)||LIST_RE.test(lines[0].rest))){out+='<div class="tl"><span class="todo">☐</span></div>';todo='';}
+  while(i<lines.length){
+    const {rest}=lines[i];let m;
+    if(/^>\s?/.test(rest)){
+      const buf=[];
+      while(i<lines.length&&/^>\s?/.test(lines[i].rest)){buf.push(inlineFmt(lines[i].rest.replace(/^>\s?/,'')));i++;}
+      out+=`<div class="bq">${buf.join('\n')}</div>`;
+    }else if(m=rest.match(/^(#{1,6})\s+(.*)$/)){
+      out+=`<div class="hd h${m[1].length}">${inlineFmt(m[2])}</div>`;i++;
+    }else if(LIST_RE.test(rest)){
+      const items=[];
+      while(i<lines.length&&(m=lines[i].rest.match(LIST_RE))){
+        items.push({level:lines[i].level,ordered:/^\d/.test(m[1]),num:parseInt(m[1],10)||0,check:m[2]!==undefined,done:/x/i.test(m[2]||''),html:inlineFmt(m[3])});
+        i++;
+      }
+      out+=renderList(items);
+    }else{
+      out+=`<div class="tl">${todo+inlineFmt(lines[i].raw)||'&nbsp;'}</div>`;
+      todo='';i++;
+    }
+  }
+  return out;
+}
+function card(time,content,task,pending){const el=document.createElement('div');el.className='memo';el.innerHTML=`<div class="mhead"><span>${time}</span>${pending?'<span class="pend">送信待ち</span>':''}</div><div class="mbody">${fmtBody(content,task)}</div>`;return el;}
 function render(){
   const tl=$('#timeline');tl.innerHTML='';
   const items=[...inboxCache.map(m=>({time:m.time,content:m.content,task:m.task,pending:false})),
