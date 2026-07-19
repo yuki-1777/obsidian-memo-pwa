@@ -85,6 +85,17 @@ textarea::placeholder{color:var(--sub);opacity:.7}
 .sheet .save{margin-top:16px;width:100%;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:600;font-family:inherit;padding:12px;border-radius:8px;cursor:pointer}
 .toast{position:fixed;top:calc(14px + env(safe-area-inset-top));left:50%;transform:translate(-50%,-10px);background:var(--text);color:var(--bg);padding:8px 16px;border-radius:6px;font-size:12.5px;opacity:0;transition:all .25s;z-index:40;pointer-events:none;max-width:86vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .toast.show{opacity:1;transform:translate(-50%,0)}
+/* QRペアリング */
+.qrbtn{width:100%;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:600;font-family:inherit;padding:12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px}
+.ordiv{display:flex;align-items:center;gap:10px;color:var(--sub);font-size:11.5px;margin:16px 0 2px}
+.ordiv::before,.ordiv::after{content:"";flex:1;height:1px;background:var(--border)}
+.scan{position:fixed;inset:0;z-index:50;background:#000;display:none;flex-direction:column;align-items:center;justify-content:center}
+.scan.open{display:flex}
+.scan video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.scanmask{position:relative;z-index:1;width:66vw;max-width:280px;aspect-ratio:1}
+.scanbox{position:absolute;inset:0;border:2px solid #fff;border-radius:16px;box-shadow:0 0 0 100vmax rgba(0,0,0,.5)}
+.scanhint{position:absolute;z-index:2;bottom:calc(100px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:#fff;font-size:13px;padding:0 24px;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.scancancel{position:absolute;z-index:2;bottom:calc(34px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);border:1px solid rgba(255,255,255,.6);background:rgba(0,0,0,.35);color:#fff;font-size:14px;font-family:inherit;padding:10px 28px;border-radius:24px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -123,6 +134,11 @@ textarea::placeholder{color:var(--sub);opacity:.7}
   <div class="sheet" id="sheet">
     <h2>設定</h2>
     <p class="note">Obsidianプラグインのローカルサーバー（HTTPS）に直接書き込みます。メモはクラウドを経由しません。オフライン時は端末に保存され、接続できたとき自動送信されます。</p>
+    <button class="qrbtn" id="btnScan">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10"/></svg>
+      QRで読み取って自動設定
+    </button>
+    <div class="ordiv"><span>または手動で入力</span></div>
     <label>サーバーURL（例: https://cntmac801.local:8928）</label>
     <input id="cfgBase" placeholder="https://xxxxx.local:8928" autocapitalize="off" autocorrect="off" inputmode="url">
     <label>接続トークン</label>
@@ -132,9 +148,17 @@ textarea::placeholder{color:var(--sub);opacity:.7}
     <button class="save" id="btnSave">保存して接続確認</button>
   </div>
 
+  <div class="scan" id="scan">
+    <video id="scanVideo" playsinline muted autoplay></video>
+    <div class="scanmask"><div class="scanbox"></div></div>
+    <div class="scanhint">プラグイン設定のQRを枠内に写してください</div>
+    <button class="scancancel" id="btnScanCancel">キャンセル</button>
+  </div>
+
   <div class="toast" id="toast"></div>
 </div>
 
+<script src="jsQR.js"></script>
 <script>
 const $ = s => document.querySelector(s);
 const LS = { get:(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}}, set:(k,v)=>localStorage.setItem(k,JSON.stringify(v)) };
@@ -312,6 +336,49 @@ $('#btnSave').onclick=async()=>{
   closeSheet();await refresh();
   toast(connected?'接続しました':'接続できません — URL・トークン・証明書を確認');
 };
+
+/* ---------- QRペアリング（カメラでURL＋トークンを読み取る） ---------- */
+let scanStream=null,scanRAF=null;
+async function openScan(){
+  if(typeof jsQR!=='function'){toast('QRリーダーを読み込めませんでした（オフライン初回は不可）');return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('このブラウザはカメラに対応していません');return;}
+  const v=$('#scanVideo');
+  try{scanStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'},audio:false});}
+  catch(e){toast('カメラを使用できません（設定で権限を許可してください）');return;}
+  v.srcObject=scanStream;try{await v.play();}catch(e){}
+  $('#scan').classList.add('open');
+  const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});
+  const tick=()=>{
+    if(!scanStream)return;
+    if(v.readyState===v.HAVE_ENOUGH_DATA&&v.videoWidth){
+      canvas.width=v.videoWidth;canvas.height=v.videoHeight;
+      ctx.drawImage(v,0,0,canvas.width,canvas.height);
+      const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+      const code=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
+      if(code&&applyPairing(code.data)){closeScan();return;}
+    }
+    scanRAF=requestAnimationFrame(tick);
+  };
+  scanRAF=requestAnimationFrame(tick);
+}
+function closeScan(){
+  if(scanRAF)cancelAnimationFrame(scanRAF);scanRAF=null;
+  if(scanStream){scanStream.getTracks().forEach(t=>t.stop());scanStream=null;}
+  $('#scanVideo').srcObject=null;
+  $('#scan').classList.remove('open');
+}
+// 有効な memo-local ペアリングQRだけ受理。他のQRは無視してスキャンを続ける
+function applyPairing(text){
+  let d;try{d=JSON.parse(text);}catch(e){return false;}
+  if(!d||d.app!=='memo-local'||!d.url||!d.token)return false;
+  cfg={base:String(d.url).trim().replace(/\/$/,''),token:String(d.token).trim()};LS.set('cfg',cfg);
+  $('#cfgBase').value=cfg.base;$('#cfgToken').value=cfg.token;
+  toast('QRを読み取りました — 接続を確認します');
+  closeSheet();refresh();
+  return true;
+}
+$('#btnScan').onclick=openScan;
+$('#btnScanCancel').onclick=closeScan;
 
 /* ---------- init ---------- */
 render();updateSend();
