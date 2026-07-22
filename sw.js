@@ -1,4 +1,4 @@
-const CACHE = 'memo-local-v2';
+const CACHE = 'memo-local-v3';
 const CORE = ['.', 'index.html', 'jsQR.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
